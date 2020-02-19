@@ -3,11 +3,12 @@ var fs = require('fs');
 var template = require('./lib/template.js');
 var path = require('path');
 var sanitizeHtml = require('sanitize-html');
-//var bodyParser = require('body-parser');
+var bodyParser = require('body-parser');
 var qs = require('querystring');
 var app = express();
 var port = 3000
 
+app.use(bodyParser.urlencoded({ extended: false }));
 
 //route, routing 어떤 길을 따라 가다가 갈림길에서 적절한 방향으로 길을 정하는 것이다.
 //app.get('/', (req, res) => res.send('Hello World!'))
@@ -70,6 +71,7 @@ app.get('/create', function(request, response){
 //post방식으로 받으면 app.post로 한다.
 
 app.post('/create_process', function(request, response){
+    /*
   var body = '';
       request.on('data', function(data){
           body = body + data;
@@ -82,6 +84,14 @@ app.post('/create_process', function(request, response){
             response.redirect(`/page/${title}`)
           });
       });
+      */
+     var post = request.body;
+     var title = post.title;
+     var description = post.description;
+     fs.writeFile(`data/${title}`, description, 'utf8', function(err){
+       response.redirect(`/page/${title}`)
+     });
+      request.body
 })
 
 app.get('/update/:pageId', function(request, response){
@@ -111,30 +121,20 @@ app.get('/update/:pageId', function(request, response){
 });
 
 app.post("/update_process", function(request, response){
-  var body = '';
-      request.on('data', function(data){
-          body = body + data;
-      });
-      request.on('end', function(){
-          var post = qs.parse(body);
-          var id = post.id;
-          var title = post.title;
-          var description = post.description;
-          fs.rename(`data/${id}`, `data/${title}`, function(error){
-            fs.writeFile(`data/${title}`, description, 'utf8', function(err){
-              response.redirect(`/page/${title}`);
-            });
-          });
-      });
+    var post = request.body;
+    var id = post.id;
+    var title = post.title;
+    var description = post.description;
+    fs.rename(`data/${id}`, `data/${title}`, function(error){
+        fs.writeFile(`data/${title}`, description, 'utf8', function(err){
+            response.redirect(`/page/${title}`);
+        });
+    });
 });
 
 app.post("/delete_process", function(request, response){
-  var body = '';
-      request.on('data', function(data){
-          body = body + data;
-      });
       request.on('end', function(){
-          var post = qs.parse(body);
+          var post = request.body;
           var id = post.id;
           var filteredId = path.parse(id).base;
           fs.unlink(`data/${filteredId}`, function(error){
